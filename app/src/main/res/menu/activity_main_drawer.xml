@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_OfflineMap"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="@string/nav_offline_map" />
+        <item
+            android:id="@+id/nav_Bookmark"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/nav_bookmark" />
+        <item
+            android:id="@+id/nav_Settings"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="@string/nav_settings" />
+    </group>
+
+    <item
+        android:id="@+id/nav_Tutorial"
+        android:icon="@drawable/ic_menu_share"
+        android:title="@string/nav_tutorial" />
+    <item
+        android:id="@+id/nav_About"
+        android:icon="@drawable/ic_menu_send"
+        android:title="@string/nav_about" />
+
+</menu>
