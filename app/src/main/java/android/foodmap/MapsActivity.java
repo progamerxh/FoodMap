@@ -2,8 +2,9 @@ package android.foodmap;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -24,7 +25,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -44,18 +44,19 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, PlaceSelectionListener, NavigationView.OnNavigationItemSelectedListener {
     static Context mContext;
@@ -72,13 +73,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     private DrawerLayout drawer;
     private ImageView imgMenu, imgFav;
+    private ProgressDialog myProgress;
+    private List<FavouritePlace> myFP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mContext = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
-
+        myFP = new ArrayList<>();
+        myProgress = new ProgressDialog(this);
+        myProgress.setTitle("Map Loading ...");
+        myProgress.setMessage("Please wait...");
+        myProgress.setCancelable(true);
+        myProgress.show();
         final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -87,7 +95,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         imgFav.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(MapsActivity.this, "Find places", Toast.LENGTH_SHORT).show();
+                String url = getPlacesUrl();
 
+                PlaceDownloadTask placeDownloadTask = new PlaceDownloadTask();
+
+                // Start downloading json data from Google Directions API
+                placeDownloadTask.execute(url);
             }
         });
         imgMenu.setOnClickListener(new View.OnClickListener() {
@@ -127,23 +141,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         fabDirect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MapsActivity.this, "FAB", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "Get direction", Toast.LENGTH_SHORT).show();
                 String url = getDirectionsUrl(myLocation, desPos);
 
-                DownloadTask downloadTask = new DownloadTask();
+                DirectionDownloadTask directionDownloadTask = new DirectionDownloadTask();
 
                 // Start downloading json data from Google Directions API
-                downloadTask.execute(url);
+                directionDownloadTask.execute(url);
             }
         });
     }
-    private void DialogAdd(){
-        final Dialog dialog = new Dialog(mContext);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView((R.layout.dialog_add));
 
 
-    }
     LocationListener locationListenerGPS = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
@@ -365,28 +374,42 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    ////Direction's functions
-    private String getDirectionsUrl(LatLng origin, LatLng dest) {
+    //JSON STUFF
+    private String makeHttpRequest(String strUrl, String method) throws IOException {
+        String data = "";
+        InputStream iStream = null;
+        HttpURLConnection urlConnection = null;
+        try {
+            URL url = new URL(strUrl);
+            // Creating an http connection to communicate with url
+            urlConnection = (HttpURLConnection) url.openConnection();
 
-        // Origin of route
-        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+            // Connecting to url
+            urlConnection.setRequestMethod(method);
 
-        // Destination of route
-        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+            // Reading data from url
+            iStream = urlConnection.getInputStream();
 
-        // Sensor enabled
-        String sensor = "sensor=false";
+            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
 
-        // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor;
+            StringBuffer sb = new StringBuffer();
 
-        // Output format
-        String output = "json";
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
 
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+            data = sb.toString();
 
-        return url;
+            br.close();
+
+        } catch (Exception e) {
+            Log.d("httprequest Exception", e.toString());
+        } finally {
+            iStream.close();
+            urlConnection.disconnect();
+        }
+        return data;
     }
 
     private String downloadUrl(String strUrl) throws IOException {
@@ -427,18 +450,33 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return data;
     }
 
-    @Override
-    public void onPlaceSelected(Place place) {
+    ////Direction's functions
+    private String getDirectionsUrl(LatLng origin, LatLng dest) {
 
+        // Origin of route
+        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+
+        // Destination of route
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+
+        // Sensor enabled
+        String sensor = "sensor=false";
+
+        // Building the parameters to the web service
+        String parameters = str_origin + "&" + str_dest + "&" + sensor;
+
+        // Output format
+        String output = "json";
+
+        // Building the url to the web service
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+
+        return url;
     }
 
-    @Override
-    public void onError(Status status) {
-
-    }
 
     // Fetches data from url passed
-    private class DownloadTask extends AsyncTask<String, Void, String> {
+    private class DirectionDownloadTask extends AsyncTask<String, Void, String> {
 
         // Downloading data in non-ui thread
         @Override
@@ -462,14 +500,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
 
-            ParserTask parserTask = new ParserTask();
+            DirectionParserTask directionParserTask = new DirectionParserTask();
 
             // Invokes the thread for parsing the JSON data
-            parserTask.execute(result);
+            directionParserTask.execute(result);
         }
     }
 
-    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+
+    private class DirectionParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
 
         // Parsing the data in non-ui thread
         @Override
@@ -526,8 +565,95 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.addPolyline(lineOptions);
         }
     }
-///End Direction's functions
 
+    ///End Direction's functions
+///Foody places
+    private String getPlacesUrl() {
+        int page = 1;
+        int count = 12;
+        int type = 3;
+
+        // Building the url to the web service
+        String url = "https://www.foody.vn/__get/Place/HomeListPlace?t=1525782987071&page="
+                + page + "&lat=" + myLocation.latitude + "&lon=" + myLocation.longitude
+                + "&count=" + count + "&districtId=&cateId=&cuisineId=&isReputation=&type="
+                + type;
+        Log.d("URL PLACE", url);
+        return url;
+    }
+
+
+    // Fetches data from url passed
+    private class PlaceDownloadTask extends AsyncTask<String, Void, String> {
+
+        // Downloading data in non-ui thread
+        @Override
+        protected String doInBackground(String... url) {
+
+            // For storing data from web service
+            String data = "";
+
+            try {
+                // Fetching the data from web service
+                data = makeHttpRequest(url[0],"GET");
+
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
+            }
+
+            return data;
+        }
+
+        // Executes in UI thread, after the execution of
+        // doInBackground()
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            PlaceParserTask placeParserTask = new PlaceParserTask();
+
+            // Invokes the thread for parsing the JSON data
+            placeParserTask.execute(result);
+        }
+    }
+
+    private class PlaceParserTask extends AsyncTask<String, Integer, List<FavouritePlace>> {
+
+        // Parsing the data in non-ui thread
+        @Override
+        protected List<FavouritePlace> doInBackground(String... jsonData) {
+
+            JSONObject jObject;
+            List<FavouritePlace> placeList = null;
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                PlacesJSONParser parser = new PlacesJSONParser();
+
+                // Starts parsing data
+                placeList = parser.parse(jObject);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return placeList;
+        }
+
+        // Executes in UI thread, after the parsing process
+        @Override
+        protected void onPostExecute(List<FavouritePlace> result) {
+
+            // Traversing through all the routes
+            for (int i = 0; i < result.size(); i++) {
+                FavouritePlace fp = result.get(i);
+                LatLng point = new LatLng(fp.Latitude, fp.Longitude);
+                MarkerOptions option = new MarkerOptions();
+                option.title(fp.Name);
+                option.position(point);
+                Marker currentMarker = mMap.addMarker(option);
+                currentMarker.showInfoWindow();
+            }
+            myFP = result;
+        }
+    }
 
     @Override
     protected void onResume() {
@@ -566,8 +692,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
+    public void onPlaceSelected(Place place) {
+
+    }
+
+    @Override
+    public void onError(Status status) {
+
+    }
+
+    @Override
     public void onMapReady(GoogleMap googleMap) {
-        Location myLocate;
         mMap = googleMap;
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -583,6 +718,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
+                myProgress.dismiss();
                 askPermissionsAndShowMyLocation();
             }
         });
