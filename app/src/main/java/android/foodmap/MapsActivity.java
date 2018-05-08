@@ -26,8 +26,6 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -70,7 +68,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     private DrawerLayout drawer;
     private ImageView imgMenu;
-    private LocationCallback mLocationCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,10 +91,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         R.id.place_autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(this);
 
-//        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
-//                .setCountry("VN") //  This should be a ISO 3166-1 Alpha-2 country code
-//                .build();
-//        autocompleteFragment.setFilter(typeFilter);
+        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                .setCountry("VN") //  This should be a ISO 3166-1 Alpha-2 country code
+                .build();
+        autocompleteFragment.setFilter(typeFilter);
         Bundle mapViewBundle = null;
         if (savedInstanceState != null) {
             mapViewBundle = savedInstanceState.getBundle(MAP_VIEW_BUNDLE_KEY);
@@ -128,18 +125,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 downloadTask.execute(url);
             }
         });
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
-                    myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 16));
-                }
-            }
-        };
     }
 
     LocationListener locationListenerGPS = new LocationListener() {
@@ -275,7 +260,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             locationManager.requestLocationUpdates(
                     locationProvider,
                     MIN_TIME_BW_UPDATES,
-                    MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) locationListenerGPS);
+                    MIN_DISTANCE_CHANGE_FOR_UPDATES, locationListenerGPS);
 
             // Lấy ra vị trí.
             myLocation = locationManager
@@ -304,7 +289,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             // Thêm Marker cho Map:
             MarkerOptions option = new MarkerOptions();
-            option.title("My Location");
+            option.title("Your Location");
             option.snippet("....");
             option.position(latLng);
             Marker currentMarker = mMap.addMarker(option);
@@ -597,6 +582,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onMarkerClick(Marker marker) {
                 marker.showInfoWindow();
+
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 16));
                 return true;
             }
