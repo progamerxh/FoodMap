@@ -1,6 +1,8 @@
 package android.foodmap;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -22,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -52,6 +55,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, PlaceSelectionListener, NavigationView.OnNavigationItemSelectedListener {
     static Context mContext;
@@ -67,7 +71,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FloatingActionButton fabCur;
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     private DrawerLayout drawer;
-    private ImageView imgMenu;
+    private ImageView imgMenu, imgFav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +83,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         navigationView.setNavigationItemSelectedListener(this);
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         imgMenu = (ImageView) findViewById(R.id.imgMenu);
+        imgFav = (ImageView) findViewById(R.id.imgFav);
+        imgFav.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
         imgMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,7 +137,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
+    private void DialogAdd(){
+        final Dialog dialog = new Dialog(mContext);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView((R.layout.dialog_add));
 
+
+    }
     LocationListener locationListenerGPS = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {

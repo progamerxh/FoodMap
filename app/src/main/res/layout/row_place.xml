@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="10"
+    android:padding="10dp"
+    >
+
+    <TextView
+        android:id="@+id/txtPlaceName"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_weight="8"
+        android:textColor="#fdfdfd"
+        android:textSize="26sp" />
+
+    <ImageView
+        android:id="@+id/imgDelete"
+        android:padding="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:layout_weight="1"
+        android:src="@android:drawable/ic_delete" />
+
+    <ImageView
+        android:id="@+id/imgEdit"
+        android:padding="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:layout_weight="1"
+        android:src="@android:drawable/ic_menu_edit" />
+</LinearLayout>
