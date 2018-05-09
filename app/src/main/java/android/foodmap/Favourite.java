@@ -53,7 +53,7 @@ public class Favourite extends AppCompatActivity {
         //đổ dữ liệu vào listview.
         coordinates = new ArrayList<>();
         lvFavourite = (ListView) findViewById(R.id.lvFavourite);
-        adapter = new PlaceAdapter(this, R.layout.row_place, coordinates);
+//        adapter = new PlaceAdapter(this, R.layout.row_place, coordinates);
         lvFavourite.setAdapter(adapter);
 
         Intent intent=getIntent();
@@ -77,6 +77,7 @@ public class Favourite extends AppCompatActivity {
                 Intent intent = new Intent(Favourite.this,MapsActivity.class);
                 intent.putExtra(LatCoor, coordinates.get(i).Latitude);
                 intent.putExtra(LngCoor, coordinates.get(i).Longitude);
+                intent.putExtra("Name",coordinates.get(i).Name);
                 startActivity(intent);
             }
         });

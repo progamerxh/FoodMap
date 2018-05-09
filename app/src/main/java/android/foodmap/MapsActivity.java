@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -14,10 +15,12 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -25,7 +28,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -44,16 +49,15 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -81,6 +85,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mContext = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        PlaceAutocompleteFragment autocompleteFragment =
+                (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(
+                        R.id.place_autocomplete_fragment);
+        autocompleteFragment.setOnPlaceSelectedListener(this);
+
+        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                .setCountry("VN") //  This should be a ISO 3166-1 Alpha-2 country code
+                .build();
+        autocompleteFragment.setFilter(typeFilter);
+        Bundle mapViewBundle = null;
+        if (savedInstanceState != null) {
+            mapViewBundle = savedInstanceState.getBundle(MAP_VIEW_BUNDLE_KEY);
+        }
         myFP = new ArrayList<>();
         myProgress = new ProgressDialog(this);
         myProgress.setTitle("Map Loading ...");
@@ -96,13 +113,46 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View v) {
                 Toast.makeText(MapsActivity.this, "Find places", Toast.LENGTH_SHORT).show();
-                String url = getPlacesUrl();
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
+                alertDialog.setTitle("Thêm địa điểm yêu thích");
+                alertDialog.setMessage("Nhập tên");
 
-                PlaceDownloadTask placeDownloadTask = new PlaceDownloadTask();
+                final EditText input = new EditText(MapsActivity.this);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT);
+                input.setLayoutParams(lp);
+                alertDialog.setView(input);
 
-                // Start downloading json data from Google Directions API
-                placeDownloadTask.execute(url);
+                alertDialog.setPositiveButton("YES",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                String check;
+                                if (input.getText().toString() == "") {
+                                    Toast.makeText(MapsActivity.this, "Chưa nhập tên!", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    check = "true";
+                                    Intent intent2 = new Intent(MapsActivity.this, Favourite.class);
+                                    intent2.putExtra("check", check);
+                                    intent2.putExtra("name", input.getText().toString());
+                                    intent2.putExtra("insertlatCoor", Double.parseDouble(new Double(desPos.latitude).toString()));
+                                    intent2.putExtra("insertlngCoor", Double.parseDouble(new Double(desPos.longitude).toString()));
+                                    startActivity(intent2);
+                                }
+                                check = "false";
+                            }
+                        });
+
+                alertDialog.setNegativeButton("NO",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+
+                alertDialog.show();
             }
+
         });
         imgMenu.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,19 +161,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        PlaceAutocompleteFragment autocompleteFragment =
-                (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(
-                        R.id.place_autocomplete_fragment);
-        autocompleteFragment.setOnPlaceSelectedListener(this);
 
-        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
-                .setCountry("VN") //  This should be a ISO 3166-1 Alpha-2 country code
-                .build();
-        autocompleteFragment.setFilter(typeFilter);
-        Bundle mapViewBundle = null;
-        if (savedInstanceState != null) {
-            mapViewBundle = savedInstanceState.getBundle(MAP_VIEW_BUNDLE_KEY);
-        }
         myLocation = new LatLng(10.816473, 106.709207);
         desPos = new LatLng(10.813025, 106.705226);
         mapView = findViewById(R.id.map_view);
@@ -351,6 +389,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (id == R.id.nav_OfflineMap) {
             // Handle the camera action
         } else if (id == R.id.nav_Bookmark) {
+            FavouriteFragment favouriteFragment = new FavouriteFragment();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.map_frame,favouriteFragment,favouriteFragment.getTag());
 
         } else if (id == R.id.nav_Settings) {
 
@@ -378,19 +419,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String makeHttpRequest(String strUrl, String method) throws IOException {
         String data = "";
         InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
+        HttpURLConnection httpURLConnection = null;
         try {
+            StrictMode.ThreadPolicy policy = new StrictMode.
+                    ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
             URL url = new URL(strUrl);
+            URLConnection conn = url.openConnection();
+            conn.setDoOutput(true);
             // Creating an http connection to communicate with url
-            urlConnection = (HttpURLConnection) url.openConnection();
-
+            httpURLConnection = (HttpURLConnection) conn;
+            Log.e("Connection", conn.toString());
             // Connecting to url
-            urlConnection.setRequestMethod(method);
-
+            httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            httpURLConnection.setRequestProperty("Accept", "application/json");
             // Reading data from url
-            iStream = urlConnection.getInputStream();
+            iStream = httpURLConnection.getInputStream();
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+            BufferedReader br = new BufferedReader(new InputStreamReader(iStream, "utf-8"));
 
             StringBuffer sb = new StringBuffer();
 
@@ -407,7 +454,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.d("httprequest Exception", e.toString());
         } finally {
             iStream.close();
-            urlConnection.disconnect();
+            httpURLConnection.disconnect();
         }
         return data;
     }
@@ -595,7 +642,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             try {
                 // Fetching the data from web service
-                data = makeHttpRequest(url[0],"GET");
+                data = makeHttpRequest(url[0], "GET");
 
             } catch (Exception e) {
                 Log.d("Background Task", e.toString());
@@ -659,6 +706,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onResume() {
         super.onResume();
         mapView.onResume();
+
     }
 
     @Override
@@ -715,6 +763,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         uiSettings.setMapToolbarEnabled(true);
         uiSettings.setCompassEnabled(true);
         uiSettings.setZoomControlsEnabled(false);
+
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
@@ -740,6 +789,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return true;
             }
         });
+        double Lat;
+        double Lng;
+        String name;
+        Intent intent = getIntent();
+        name = intent.getStringExtra("Name");
+        Lng=intent.getDoubleExtra(Favourite.LngCoor,0);
+        Lat=intent.getDoubleExtra(Favourite.LatCoor,0);
+        LatLng favouriteCoor = new LatLng(Lat, Lng);
+        MarkerOptions option = new MarkerOptions();
+        option.title(name);
+        option.snippet("....");
+        option.position(favouriteCoor);
+        Marker currentMarker = mMap.addMarker(option);
+        currentMarker.showInfoWindow();
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(favouriteCoor, 13));
     }
 
 }

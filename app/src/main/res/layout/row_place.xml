@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="35dp"
         android:layout_weight="8"
-        android:textColor="#fdfdfd"
+        android:textColor="#FF000000"
         android:textSize="26sp" />
 
     <ImageView
@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="35dp"
         android:layout_weight="1"
-        android:src="@android:drawable/ic_delete" />
+        android:src="@android:drawable/ic_menu_delete" />
 
     <ImageView
         android:id="@+id/imgEdit"

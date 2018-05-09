@@ -9,15 +9,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.Map;
 
 
 public class PlaceAdapter extends BaseAdapter {
-
-    private Favourite context;
+    private MapsActivity context;
     private int layout;
     private List<FavouritePlace> favouritePlacesList;
 
-    public PlaceAdapter(Favourite context, int layout, List<FavouritePlace> favouritePlaces) {
+    public PlaceAdapter(MapsActivity context, int layout, List<FavouritePlace> favouritePlaces) {
         this.context = context;
         this.layout = layout;
         this.favouritePlacesList = favouritePlaces;
@@ -62,19 +62,19 @@ public class PlaceAdapter extends BaseAdapter {
         final FavouritePlace favouritePlace = favouritePlacesList.get(i);
         Holder.txtPlaceName.setText(favouritePlace.Name);
 
-        //Bắt sự kiện xóa, sửa
-        Holder.imgEdit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                context.DialogEdit(favouritePlace.Name,favouritePlace.ID);
-            }
-        });
-        Holder.imgDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                context.DialogDelete(favouritePlace.Name, favouritePlace.ID);
-            }
-        });
+//        //Bắt sự kiện xóa, sửa
+//        Holder.imgEdit.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                context.DialogEdit(favouritePlace.Name,favouritePlace.ID);
+//            }
+//        });
+//        Holder.imgDelete.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                context.DialogDelete(favouritePlace.Name, favouritePlace.ID);
+//            }
+//        });
         return view;
     }
 
