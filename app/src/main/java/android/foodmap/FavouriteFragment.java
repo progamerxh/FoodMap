@@ -1,18 +1,25 @@
 package android.foodmap;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.Fragment;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
-import android.widget.ListAdapter;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 
 /**
@@ -24,35 +31,20 @@ import java.util.Map;
  * create an instance of this fragment.
  */
 public class FavouriteFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-    ArrayList<FavouritePlace> coordinates;
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-    private MapsActivity context;
+
+    private MapsActivity main;
+    static Context context;
     private OnFragmentInteractionListener mListener;
+    static Database database;
+    ListView lvFavourite;
+    static ArrayList<FavouritePlace> coordinates;
+    static PlaceAdapter adapter;
+    LinearLayout layout_favourite;
 
-    public FavouriteFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment FavouriteFragment.
-     */
     // TODO: Rename and change types and number of parameters
-    public static FavouriteFragment newInstance(String param1, String param2) {
+    public static FavouriteFragment newInstance() {
         FavouriteFragment fragment = new FavouriteFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -60,22 +52,39 @@ public class FavouriteFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        context = getActivity(); // use this reference to invoke main callbacks
+        main = (MapsActivity) getActivity();
+
+        database = new Database(context, "Favourite-Places", null, 1);
+        //database.QueryData("INSERT INTO PlaceCoordinates VALUES(null, 'thu', '234','22')");
+        //Tạo bảng Place-Coordinates:
+        database.QueryData("CREATE TABLE IF NOT EXISTS PlaceCoordinates(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                " Name VARCHAR(100)," +
+                " Latitude DOUBLE," +
+                " Longitude DOUBLE)");
+        //đổ dữ liệu vào listview.
+        coordinates = new ArrayList<>();
+
+        adapter = new PlaceAdapter(main, R.layout.row_place, coordinates);
+
+
+        getDataFavouritePlace();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        coordinates = new ArrayList<>();
-        View view = inflater.inflate(R.layout.fragment_favourite, container, false);
-        ListView listView = (ListView) view.findViewById(R.id.lvFavourite);
-        ListAdapter adapter = new PlaceAdapter(context, R.layout.row_place, coordinates);
-        listView.setAdapter((ListAdapter) adapter);
-        return inflater.inflate(R.layout.fragment_favourite, container, false);
+        layout_favourite = (LinearLayout) inflater.inflate(R.layout.fragment_favourite, null);
+        lvFavourite = (ListView) layout_favourite.findViewById(R.id.lvFavourite);
+        lvFavourite.setAdapter(adapter);
+        lvFavourite.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                main.onMsgFromFragToMain("PLACE", coordinates.get(position));
+            }
+        });
+        return layout_favourite;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -85,16 +94,6 @@ public class FavouriteFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
 
     @Override
     public void onDetach() {
@@ -115,5 +114,77 @@ public class FavouriteFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+
+    static void getDataFavouritePlace() {
+        //select data
+        Cursor dataPlace = database.GetData("SELECT * FROM PlaceCoordinates");
+        coordinates.clear();
+        while (dataPlace.moveToNext()) {
+            String Name = dataPlace.getString(1);
+            int id = dataPlace.getInt(0);
+            double lat = dataPlace.getDouble(2);
+            double lng = dataPlace.getDouble(3);
+            coordinates.add(new FavouritePlace(id, Name, lat, lng));
+        }
+        adapter.notifyDataSetChanged();
+    }
+
+    public void onMsgFromMainToFragment(FavouritePlace favouritePlace) {
+        database.QueryData("INSERT INTO PlaceCoordinates VALUES(null, '"
+                + favouritePlace.Name + "', '"
+                + favouritePlace.Latitude + "','"
+                + favouritePlace.Longitude + "')");
+    }
+
+    static public void DialogDelete(String name, final int id) {
+        AlertDialog.Builder dialogDelete = new AlertDialog.Builder(context);
+        dialogDelete.setMessage("Bạn có muốn xóa " + name + " không?");
+        dialogDelete.setPositiveButton("Có", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                database.QueryData("DELETE FROM PlaceCoordinates WHERE ID='" + id + "'");
+                Toast.makeText(context, "Đã xóa", Toast.LENGTH_SHORT).show();
+                getDataFavouritePlace();
+            }
+        });
+        dialogDelete.setNegativeButton("Không", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+        dialogDelete.show();
+    }
+
+    static void DialogEdit(String name, final int id) {
+        final Dialog dialog = new Dialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView((R.layout.dialog_edit));
+
+        final EditText edtNewName = (EditText) dialog.findViewById(R.id.edtNewName);
+        Button btnOK = (Button) dialog.findViewById(R.id.btnOK);
+        Button btnHuy = (Button) dialog.findViewById(R.id.btnHuy);
+
+        edtNewName.setText(name);
+        btnOK.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(context, "thanh công", Toast.LENGTH_LONG).show();
+                String newName = edtNewName.getText().toString().trim();
+                database.QueryData("UPDATE PlaceCoordinates SET Name ='" + newName + "' WHERE ID = '" + id + "'");
+
+                dialog.dismiss();
+                getDataFavouritePlace();
+            }
+        });
+        btnHuy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 }

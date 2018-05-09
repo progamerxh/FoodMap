@@ -2,6 +2,8 @@ package android.foodmap;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -20,7 +22,6 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -79,6 +80,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ImageView imgMenu, imgFav;
     private ProgressDialog myProgress;
     private List<FavouritePlace> myFP;
+    private FragmentTransaction ft;
+    private FavouriteFragment favouriteFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +101,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (savedInstanceState != null) {
             mapViewBundle = savedInstanceState.getBundle(MAP_VIEW_BUNDLE_KEY);
         }
+        favouriteFragment = FavouriteFragment.newInstance();
+        ft = getFragmentManager().beginTransaction();
+
+        ft.commit();
+
         myFP = new ArrayList<>();
         myProgress = new ProgressDialog(this);
         myProgress.setTitle("Map Loading ...");
@@ -127,19 +135,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 alertDialog.setPositiveButton("YES",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                String check;
-                                if (input.getText().toString() == "") {
-                                    Toast.makeText(MapsActivity.this, "Chưa nhập tên!", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    check = "true";
-                                    Intent intent2 = new Intent(MapsActivity.this, Favourite.class);
-                                    intent2.putExtra("check", check);
-                                    intent2.putExtra("name", input.getText().toString());
-                                    intent2.putExtra("insertlatCoor", Double.parseDouble(new Double(desPos.latitude).toString()));
-                                    intent2.putExtra("insertlngCoor", Double.parseDouble(new Double(desPos.longitude).toString()));
-                                    startActivity(intent2);
-                                }
-                                check = "false";
+                                favouriteFragment.onMsgFromMainToFragment(new FavouritePlace(input.getText().toString(), desPos.latitude, desPos.longitude));
                             }
                         });
 
@@ -188,6 +184,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 directionDownloadTask.execute(url);
             }
         });
+
     }
 
 
@@ -351,13 +348,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .build();                   // Creates a CameraPosition from the builder
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
-            // Thêm Marker cho Map:
-            MarkerOptions option = new MarkerOptions();
-            option.title("Your Location");
-            option.snippet("....");
-            option.position(latLng);
-            Marker currentMarker = mMap.addMarker(option);
-            currentMarker.showInfoWindow();
         } else {
             Toast.makeText(this, "Location not found!", Toast.LENGTH_LONG).show();
             Log.i(MYTAG, "Location not found");
@@ -387,11 +377,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         int id = item.getItemId();
 
         if (id == R.id.nav_OfflineMap) {
-            // Handle the camera action
+            getFragmentManager().popBackStackImmediate();
         } else if (id == R.id.nav_Bookmark) {
-            FavouriteFragment favouriteFragment = new FavouriteFragment();
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.map_frame,favouriteFragment,favouriteFragment.getTag());
+            ft = getFragmentManager().beginTransaction();
+            ft.addToBackStack("tag of fragment");
+            ft.replace(R.id.favourite_fragment, favouriteFragment);
+            ft.commit();
 
         } else if (id == R.id.nav_Settings) {
 
@@ -410,9 +401,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
+        } else if (getFragmentManager().getBackStackEntryCount() > 0)
+            getFragmentManager().popBackStackImmediate();
+        else
             super.onBackPressed();
-        }
     }
 
     //JSON STUFF
@@ -794,8 +786,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         String name;
         Intent intent = getIntent();
         name = intent.getStringExtra("Name");
-        Lng=intent.getDoubleExtra(Favourite.LngCoor,0);
-        Lat=intent.getDoubleExtra(Favourite.LatCoor,0);
+        Lng = intent.getDoubleExtra(Favourite.LngCoor, 0);
+        Lat = intent.getDoubleExtra(Favourite.LatCoor, 0);
         LatLng favouriteCoor = new LatLng(Lat, Lng);
         MarkerOptions option = new MarkerOptions();
         option.title(name);
@@ -804,6 +796,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Marker currentMarker = mMap.addMarker(option);
         currentMarker.showInfoWindow();
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(favouriteCoor, 13));
+    }
+
+    public void onMsgFromFragToMain(String sender, FavouritePlace favouritePlace) {
+        if (sender.equals("RED-FRAG")) {
+            LatLng latLng = new LatLng(favouritePlace.Latitude, favouritePlace.Longitude);
+            MarkerOptions option = new MarkerOptions();
+            option.title(favouritePlace.Name);
+            option.snippet("....");
+            option.position(latLng);
+            Marker currentMarker = mMap.addMarker(option);
+            currentMarker.showInfoWindow();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+        }
+    }
+
+    ;
+
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        super.onAttachFragment(fragment);
+        // get a reference to each fragment attached to the GUI
+        if (fragment.getClass() == FavouriteFragment.class) {
+            favouriteFragment = (FavouriteFragment) fragment;
+        }
     }
 
 }

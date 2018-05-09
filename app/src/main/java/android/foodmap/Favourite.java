@@ -34,9 +34,10 @@ public class Favourite extends AppCompatActivity {
     private Marker mSydney;
     private Marker mBrisbane;
 
-    int REQUEST_CODE=123;
-    public static String LatCoor ="latCoor";
-    public static String LngCoor ="lngCoor";
+    int REQUEST_CODE = 123;
+    public static String LatCoor = "latCoor";
+    public static String LngCoor = "lngCoor";
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,19 +54,19 @@ public class Favourite extends AppCompatActivity {
         //đổ dữ liệu vào listview.
         coordinates = new ArrayList<>();
         lvFavourite = (ListView) findViewById(R.id.lvFavourite);
-//        adapter = new PlaceAdapter(this, R.layout.row_place, coordinates);
+        adapter = new PlaceAdapter(this, R.layout.row_place, coordinates);
         lvFavourite.setAdapter(adapter);
 
-        Intent intent=getIntent();
-        String name,check;
-        double kinhdo,vido;
+        Intent intent = getIntent();
+        String name, check;
+        double kinhdo, vido;
 
-        check=intent.getStringExtra("check");
+        check = intent.getStringExtra("check");
 
-        if (check.equals("true")){
-            name=intent.getStringExtra("name");
-            kinhdo=intent.getDoubleExtra("insertlatCoor",0);
-            vido=intent.getDoubleExtra("insertlngCoor",0);
+        if (check.equals("true")) {
+            name = intent.getStringExtra("name");
+            kinhdo = intent.getDoubleExtra("insertlatCoor", 0);
+            vido = intent.getDoubleExtra("insertlngCoor", 0);
             database.QueryData("INSERT INTO PlaceCoordinates VALUES(null, '" + name + "', '" + kinhdo + "','" + vido + "')");
             getDataFavouritePlace();
         }
@@ -74,10 +75,10 @@ public class Favourite extends AppCompatActivity {
         lvFavourite.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent intent = new Intent(Favourite.this,MapsActivity.class);
+                Intent intent = new Intent(Favourite.this, MapsActivity.class);
                 intent.putExtra(LatCoor, coordinates.get(i).Latitude);
                 intent.putExtra(LngCoor, coordinates.get(i).Longitude);
-                intent.putExtra("Name",coordinates.get(i).Name);
+                intent.putExtra("Name", coordinates.get(i).Name);
                 startActivity(intent);
             }
         });
@@ -86,13 +87,13 @@ public class Favourite extends AppCompatActivity {
         getDataFavouritePlace();
     }
 
-    public void DialogDelete(String name, final int id){
+    public void DialogDelete(String name, final int id) {
         AlertDialog.Builder dialogDelete = new AlertDialog.Builder(this);
-        dialogDelete.setMessage("Bạn có muốn xóa " + name +" không?");
+        dialogDelete.setMessage("Bạn có muốn xóa " + name + " không?");
         dialogDelete.setPositiveButton("Có", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                database.QueryData("DELETE FROM PlaceCoordinates WHERE ID='"+ id +"'");
+                database.QueryData("DELETE FROM PlaceCoordinates WHERE ID='" + id + "'");
                 Toast.makeText(Favourite.this, "Đã xóa", Toast.LENGTH_SHORT).show();
                 getDataFavouritePlace();
             }
@@ -105,7 +106,8 @@ public class Favourite extends AppCompatActivity {
         });
         dialogDelete.show();
     }
-    public void DialogEdit(String name, final int id){
+
+    public void DialogEdit(String name, final int id) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView((R.layout.dialog_edit));
@@ -118,9 +120,9 @@ public class Favourite extends AppCompatActivity {
         btnOK.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(Favourite.this,"thanh công",Toast.LENGTH_LONG).show();
+                Toast.makeText(Favourite.this, "thanh công", Toast.LENGTH_LONG).show();
                 String newName = edtNewName.getText().toString().trim();
-                database.QueryData("UPDATE PlaceCoordinates SET Name ='"+ newName +"' WHERE ID = '"+id+"'");
+                database.QueryData("UPDATE PlaceCoordinates SET Name ='" + newName + "' WHERE ID = '" + id + "'");
 
                 dialog.dismiss();
                 getDataFavouritePlace();
@@ -134,6 +136,7 @@ public class Favourite extends AppCompatActivity {
         });
         dialog.show();
     }
+
     private void getDataFavouritePlace() {
         //select data
         Cursor dataPlace = database.GetData("SELECT * FROM PlaceCoordinates");
@@ -143,7 +146,7 @@ public class Favourite extends AppCompatActivity {
             int id = dataPlace.getInt(0);
             double lat = dataPlace.getDouble(2);
             double lng = dataPlace.getDouble(3);
-            coordinates.add(new FavouritePlace(id,Name, lat, lng));
+            coordinates.add(new FavouritePlace(id, Name, lat, lng));
         }
         adapter.notifyDataSetChanged();
     }

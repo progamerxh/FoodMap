@@ -4,27 +4,30 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 
 public class PlaceAdapter extends BaseAdapter {
-    private MapsActivity context;
+    private Context context;
     private int layout;
     private List<FavouritePlace> favouritePlacesList;
-
-    public PlaceAdapter(MapsActivity context, int layout, List<FavouritePlace> favouritePlaces) {
+    private Context fcontext;
+    public PlaceAdapter(Context context, int layout, List<FavouritePlace> favouritePlaces) {
         this.context = context;
         this.layout = layout;
         this.favouritePlacesList = favouritePlaces;
     }
 
+
     @Override
-    public int getCount() {
+    public int getCount(){
         return favouritePlacesList.size();
     }
 
@@ -62,19 +65,19 @@ public class PlaceAdapter extends BaseAdapter {
         final FavouritePlace favouritePlace = favouritePlacesList.get(i);
         Holder.txtPlaceName.setText(favouritePlace.Name);
 
-//        //Bắt sự kiện xóa, sửa
-//        Holder.imgEdit.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                context.DialogEdit(favouritePlace.Name,favouritePlace.ID);
-//            }
-//        });
-//        Holder.imgDelete.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                context.DialogDelete(favouritePlace.Name, favouritePlace.ID);
-//            }
-//        });
+        //Bắt sự kiện xóa, sửa
+        Holder.imgEdit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FavouriteFragment.DialogEdit(favouritePlace.Name,favouritePlace.ID);
+            }
+        });
+        Holder.imgDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FavouriteFragment.DialogDelete(favouritePlace.Name, favouritePlace.ID);
+            }
+        });
         return view;
     }
 
