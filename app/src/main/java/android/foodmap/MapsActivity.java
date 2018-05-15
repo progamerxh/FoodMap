@@ -7,7 +7,6 @@ import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -19,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -30,8 +30,10 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -79,10 +81,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private DrawerLayout drawer;
     private ImageView imgMenu, imgFav;
     private ProgressDialog myProgress;
-    private List<FavouritePlace> myFP;
     private FragmentTransaction ft;
     private FavouriteFragment favouriteFragment;
-
+    private FavouritePlace curFPMarfker;
+    private BottomSheetBehavior mBottomSheetBehavior;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mContext = this;
@@ -103,10 +105,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         favouriteFragment = FavouriteFragment.newInstance();
         ft = getFragmentManager().beginTransaction();
-
         ft.commit();
 
-        myFP = new ArrayList<>();
         myProgress = new ProgressDialog(this);
         myProgress.setTitle("Map Loading ...");
         myProgress.setMessage("Please wait...");
@@ -184,7 +184,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 directionDownloadTask.execute(url);
             }
         });
+        View bottomSheet = findViewById(R.id.bottom_sheet );
+        mBottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        mBottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    mBottomSheetBehavior.setPeekHeight(0);
+                }
+            }
 
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
+            }
+        });
+        bottomSheet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
     }
 
 
@@ -690,7 +711,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Marker currentMarker = mMap.addMarker(option);
                 currentMarker.showInfoWindow();
             }
-            myFP = result;
         }
     }
 
@@ -776,30 +796,60 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onMarkerClick(Marker marker) {
                 marker.showInfoWindow();
-
+                if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN)
+                {
+                    mBottomSheetBehavior.setPeekHeight(400);
+                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                }
+                else
+                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 16));
                 return true;
             }
         });
-        double Lat;
-        double Lng;
-        String name;
-        Intent intent = getIntent();
-        name = intent.getStringExtra("Name");
-        Lng = intent.getDoubleExtra(Favourite.LngCoor, 0);
-        Lat = intent.getDoubleExtra(Favourite.LatCoor, 0);
-        LatLng favouriteCoor = new LatLng(Lat, Lng);
-        MarkerOptions option = new MarkerOptions();
-        option.title(name);
-        option.snippet("....");
-        option.position(favouriteCoor);
-        Marker currentMarker = mMap.addMarker(option);
-        currentMarker.showInfoWindow();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(favouriteCoor, 13));
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                View v = (MapsActivity.this).getLayoutInflater().inflate(R.layout.marker_layout, null);
+                ImageView imgPhoto = (ImageView) v.findViewById(R.id.imgPhoto);
+                TextView txtPlaceName = (TextView) v.findViewById(R.id.txtPlaceName);
+                TextView txtPlaceType = (TextView) v.findViewById(R.id.txtPlaceType);
+                TextView txtPlaceAddress = (TextView) v.findViewById(R.id.txtPlaceAddress);
+                TextView txtPlaceOpenTime = (TextView) v.findViewById(R.id.txtPlaceOpenTime);
+                ImageButton btnDirection = (ImageButton) v.findViewById(R.id.btnDirection);
+                v.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        fabDirect.callOnClick();
+                    }
+                });
+                btnDirection.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        fabDirect.callOnClick();
+                    }
+                });
+                txtPlaceName.setText(curFPMarfker.Name);
+                txtPlaceType.setText("Type");
+                txtPlaceAddress.setText("Address");
+                txtPlaceOpenTime.setText("Time 00:00");
+
+                return v;
+
+            }
+        });
     }
 
     public void onMsgFromFragToMain(String sender, FavouritePlace favouritePlace) {
-        if (sender.equals("RED-FRAG")) {
+        if (sender.equals("PLACE")) {
+            mMap.clear();
+            curFPMarfker = favouritePlace;
+            getFragmentManager().popBackStackImmediate();
             LatLng latLng = new LatLng(favouritePlace.Latitude, favouritePlace.Longitude);
             MarkerOptions option = new MarkerOptions();
             option.title(favouritePlace.Name);
