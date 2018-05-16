@@ -53,8 +53,8 @@ public class FavouriteFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getActivity(); // use this reference to invoke main callbacks
-        main = (MapsActivity) getActivity();
 
+        main = (MapsActivity) getActivity();
         database = new Database(context, "Favourite-Places", null, 1);
         //database.QueryData("INSERT INTO PlaceCoordinates VALUES(null, 'thu', '234','22')");
         //Tạo bảng Place-Coordinates:

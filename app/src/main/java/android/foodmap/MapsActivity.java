@@ -75,7 +75,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationManager locationManager;
     private LatLng myLocation;
     private LatLng desPos;
-    private FloatingActionButton fabDirect;
+    public FloatingActionButton fabDirect;
     private FloatingActionButton fabCur;
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     private DrawerLayout drawer;
@@ -85,6 +85,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FavouriteFragment favouriteFragment;
     private FavouritePlace curFPMarfker;
     private BottomSheetBehavior mBottomSheetBehavior;
+    private MarkerDetailFragment markerDetailFragment;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mContext = this;
@@ -184,28 +185,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 directionDownloadTask.execute(url);
             }
         });
-        View bottomSheet = findViewById(R.id.bottom_sheet );
-        mBottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        mBottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
-                    mBottomSheetBehavior.setPeekHeight(0);
-                }
-            }
 
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-
-            }
-        });
-        bottomSheet.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            }
-        });
     }
 
 
@@ -620,7 +600,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 lineOptions.width(10);
                 lineOptions.color(Color.BLUE);
             }
-
             // Drawing polyline in the Google Map for the i-th route
             mMap.addPolyline(lineOptions);
         }
@@ -775,7 +754,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         uiSettings.setMapToolbarEnabled(true);
         uiSettings.setCompassEnabled(true);
         uiSettings.setZoomControlsEnabled(false);
-
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
+        });
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
@@ -795,14 +779,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
+                desPos = marker.getPosition();
                 marker.showInfoWindow();
-                if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN)
-                {
-                    mBottomSheetBehavior.setPeekHeight(400);
-                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                }
-                else
-                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                markerDetailFragment = new MarkerDetailFragment();
+                markerDetailFragment.show(getSupportFragmentManager(), markerDetailFragment.getTag());
+
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 16));
                 return true;
             }
@@ -861,7 +842,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    ;
+    public void onMsgFromFragToMain(String sender, String msg) {
+        if (sender.equals("DIRECT"))
+            fabDirect.callOnClick();
+            markerDetailFragment.dismiss();
+
+    }
+
 
     @Override
     public void onAttachFragment(Fragment fragment) {
