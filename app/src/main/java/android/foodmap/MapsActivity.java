@@ -8,7 +8,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -46,6 +50,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -84,8 +89,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FragmentTransaction ft;
     private FavouriteFragment favouriteFragment;
     private FavouritePlace curFPMarfker;
-    private BottomSheetBehavior mBottomSheetBehavior;
+    private BottomSheetBehavior bottomSheetBehavior;
     private MarkerDetailFragment markerDetailFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mContext = this;
@@ -757,7 +763,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
         });
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
@@ -832,10 +838,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             curFPMarfker = favouritePlace;
             getFragmentManager().popBackStackImmediate();
             LatLng latLng = new LatLng(favouritePlace.Latitude, favouritePlace.Longitude);
+            Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+            Bitmap bmp = Bitmap.createBitmap(80, 80, conf);
+            Canvas canvas1 = new Canvas(bmp);
+
+// paint defines the text color, stroke width and size
+            Paint color = new Paint();
+            color.setTextSize(35);
+            color.setColor(Color.BLACK);
+
+// modify canvas
+            canvas1.drawBitmap(BitmapFactory.decodeResource(getResources(),
+                    R.drawable.ic_menu_camera), 0, 0, color);
+            canvas1.drawText("User Name!", 30, 40, color);
             MarkerOptions option = new MarkerOptions();
             option.title(favouritePlace.Name);
             option.snippet("....");
             option.position(latLng);
+            option.icon(BitmapDescriptorFactory.fromBitmap(bmp));
+            option.anchor(0.5f, 1);
             Marker currentMarker = mMap.addMarker(option);
             currentMarker.showInfoWindow();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
@@ -845,7 +866,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMsgFromFragToMain(String sender, String msg) {
         if (sender.equals("DIRECT"))
             fabDirect.callOnClick();
-            markerDetailFragment.dismiss();
+        markerDetailFragment.dismiss();
 
     }
 
