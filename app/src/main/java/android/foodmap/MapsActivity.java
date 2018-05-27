@@ -310,8 +310,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        String locationProvider = this.getEnabledLocationProvider();
-
+//        String locationProvider = this.getEnabledLocationProvider();
+        String locationProvider = "network";
         if (locationProvider == null) {
             return;
         }
@@ -855,8 +855,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             option.title(favouritePlace.Name);
             option.snippet("....");
             option.position(latLng);
-            option.icon(BitmapDescriptorFactory.fromBitmap(bmp));
-            option.anchor(0.5f, 1);
+//            option.icon(BitmapDescriptorFactory.fromBitmap(bmp));
+//            option.anchor(0.5f, 1);
             Marker currentMarker = mMap.addMarker(option);
             currentMarker.showInfoWindow();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
