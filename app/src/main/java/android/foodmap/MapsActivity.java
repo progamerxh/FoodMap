@@ -88,9 +88,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mContext = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        mContext = this;
+        askPermissions();
         PlaceAutocompleteFragment autocompleteFragment =
                 (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(
                         R.id.place_autocomplete_fragment);
@@ -220,7 +221,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     };
 
-    private void askPermissionsAndShowMyLocation() {
+    private void askPermissions() {
 
         // Với API >= 23, bạn phải hỏi người dùng cho phép xem vị trí của họ.
         if (Build.VERSION.SDK_INT >= 23) {
@@ -244,9 +245,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return;
             }
         }
-
-        // Hiển thị vị trí hiện thời trên bản đồ.
-        this.showMyLocation();
     }
 
 
@@ -747,11 +745,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        askPermissions();
+
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            askPermissions();
+//        }
         mMap = googleMap;
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        mMap.setMyLocationEnabled(true);
         mMap.setIndoorEnabled(true);
         UiSettings uiSettings = mMap.getUiSettings();
         uiSettings.setIndoorLevelPickerEnabled(true);
@@ -769,7 +768,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onMapLoaded() {
                 myProgress.dismiss();
-                askPermissionsAndShowMyLocation();
+                showMyLocation();
             }
         });
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
