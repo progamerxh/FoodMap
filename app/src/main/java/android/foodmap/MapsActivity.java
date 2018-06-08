@@ -30,7 +30,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -86,6 +85,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FavouritePlace curFPMarfker;
     private BottomSheetBehavior mBottomSheetBehavior;
     private MarkerDetailFragment markerDetailFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mContext = this;
@@ -158,9 +158,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-
-        myLocation = new LatLng(10.816473, 106.709207);
-        desPos = new LatLng(10.813025, 106.705226);
         mapView = findViewById(R.id.map_view);
         mapView.onCreate(mapViewBundle);
         mapView.getMapAsync(this);
@@ -171,6 +168,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View v) {
                 showMyLocation();
+                String url = getPlacesUrl();
+
+                PlaceDownloadTask placeDownloadTask = new PlaceDownloadTask();
+
+                // Start downloading json data from Google Directions API
+                placeDownloadTask.execute(url);
             }
         });
         fabDirect.setOnClickListener(new View.OnClickListener() {
@@ -185,6 +188,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 directionDownloadTask.execute(url);
             }
         });
+
 
     }
 
@@ -217,7 +221,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     };
 
     private void askPermissionsAndShowMyLocation() {
-
 
         // Với API >= 23, bạn phải hỏi người dùng cho phép xem vị trí của họ.
         if (Build.VERSION.SDK_INT >= 23) {
@@ -304,8 +307,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-//        String locationProvider = this.getEnabledLocationProvider();
-        String locationProvider = "network";
+        String locationProvider = this.getEnabledLocationProvider();
+//        String locationProvider = "network";
         if (locationProvider == null) {
             return;
         }
@@ -339,7 +342,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (myLocation != null) {
 
             LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
 
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(latLng)             // Sets the center of the map to location user
@@ -613,10 +616,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         int type = 3;
 
         // Building the url to the web service
-        String url = "https://www.foody.vn/__get/Place/HomeListPlace?t=1525782987071&page="
-                + page + "&lat=" + myLocation.latitude + "&lon=" + myLocation.longitude
-                + "&count=" + count + "&districtId=&cateId=&cuisineId=&isReputation=&type="
-                + type;
+//        String url = "https://www.foody.vn/ho-chi-minh/dia-diem?ds=Restaurant&vt=row&st=7&lat="
+//                + myLocation.latitude + "&lon=" + myLocation.longitude + "&page=" + page + "&provinceId=217&append=true";
+        String url = "https://foodmap-server.herokuapp.com/ho-chi-minh";
         Log.d("URL PLACE", url);
         return url;
     }
@@ -634,8 +636,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             try {
                 // Fetching the data from web service
-                data = makeHttpRequest(url[0], "GET");
-
+                data = downloadUrl(url[0]);
             } catch (Exception e) {
                 Log.d("Background Task", e.toString());
             }
@@ -648,8 +649,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            PlaceParserTask placeParserTask = new PlaceParserTask();
+//            String[] separated1 = result.split("\\\"searchItems\\\":");
+//            String[] separated2 = separated1[1].split(",\\\"adItems\\\":");
 
+            PlaceParserTask placeParserTask = new PlaceParserTask();
             // Invokes the thread for parsing the JSON data
             placeParserTask.execute(result);
         }
@@ -684,12 +687,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             for (int i = 0; i < result.size(); i++) {
                 FavouritePlace fp = result.get(i);
                 LatLng point = new LatLng(fp.Latitude, fp.Longitude);
+//                favouriteFragment.onMsgFromMainToFragment(new FavouritePlace(fp.Name, fp.Latitude, fp.Longitude));
                 MarkerOptions option = new MarkerOptions();
                 option.title(fp.Name);
                 option.position(point);
                 Marker currentMarker = mMap.addMarker(option);
                 currentMarker.showInfoWindow();
             }
+            Toast.makeText(MapsActivity.this, "Add marker done!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -799,27 +804,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 View v = (MapsActivity.this).getLayoutInflater().inflate(R.layout.marker_layout, null);
                 ImageView imgPhoto = (ImageView) v.findViewById(R.id.imgPhoto);
                 TextView txtPlaceName = (TextView) v.findViewById(R.id.txtPlaceName);
-                TextView txtPlaceType = (TextView) v.findViewById(R.id.txtPlaceType);
-                TextView txtPlaceAddress = (TextView) v.findViewById(R.id.txtPlaceAddress);
-                TextView txtPlaceOpenTime = (TextView) v.findViewById(R.id.txtPlaceOpenTime);
-                ImageButton btnDirection = (ImageButton) v.findViewById(R.id.btnDirection);
-                v.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        fabDirect.callOnClick();
-                    }
-                });
-                btnDirection.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        fabDirect.callOnClick();
-                    }
-                });
-                txtPlaceName.setText(curFPMarfker.Name);
-                txtPlaceType.setText("Type");
-                txtPlaceAddress.setText("Address");
-                txtPlaceOpenTime.setText("Time 00:00");
-
                 return v;
 
             }
@@ -836,21 +820,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             option.title(favouritePlace.Name);
             option.snippet("....");
             option.position(latLng);
-<<<<<<< HEAD
-//            option.icon(BitmapDescriptorFactory.fromBitmap(bmp));
-//            option.anchor(0.5f, 1);
-=======
->>>>>>> parent of 2a5a8f9... Update
             Marker currentMarker = mMap.addMarker(option);
             currentMarker.showInfoWindow();
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
         }
     }
 
     public void onMsgFromFragToMain(String sender, String msg) {
         if (sender.equals("DIRECT"))
             fabDirect.callOnClick();
-            markerDetailFragment.dismiss();
+        markerDetailFragment.dismiss();
 
     }
 

@@ -16,7 +16,7 @@ public class PlacesJSONParser {
     public List<FavouritePlace> parse(JSONObject jObject) {
         List<FavouritePlace> placeList = new ArrayList<>();
         try {
-            JSONArray jArray = jObject.getJSONArray("Items");
+            JSONArray jArray = jObject.getJSONArray("searchItems");
             for(int i=0; i < jArray.length(); i++) {
 
                 JSONObject mjObject = jArray.getJSONObject(i);
