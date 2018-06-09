@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -11,10 +10,9 @@
     instead of nested layouts -->
     <ImageView
         android:id="@+id/imgPhoto"
-        android:layout_gravity="center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@mipmap/ic_launcher_round" />
+        android:layout_gravity="center" />
 
     <TextView
         android:id="@+id/txtPlaceName"
@@ -57,12 +55,14 @@
         android:layout_height="wrap_content"
         android:foreground="?attr/selectableItemBackground"
         android:orientation="horizontal">
+
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginRight="32dp"
             android:src="@drawable/ic_menu_slideshow"
             android:tint="#737373" />
+
         <TextView
             android:id="@+id/txtPlaceOpenTime"
             android:layout_width="wrap_content"

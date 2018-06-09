@@ -66,7 +66,6 @@ import java.util.List;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, PlaceSelectionListener, NavigationView.OnNavigationItemSelectedListener {
     static Context mContext;
-
     private static final String MYTAG = "MYTAG";
     public static final int REQUEST_ID_ACCESS_COURSE_FINE_LOCATION = 100;
     private MapView mapView;
@@ -83,7 +82,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FragmentTransaction ft;
     private FavouriteFragment favouriteFragment;
     private FavouritePlace curFPMarfker;
-    private BottomSheetBehavior mBottomSheetBehavior;
+    private HashMap<Marker, FavouritePlace> favouritePlaceMarkerMap;
     private MarkerDetailFragment markerDetailFragment;
 
     @Override
@@ -91,6 +90,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         mContext = this;
+        favouritePlaceMarkerMap = new HashMap<Marker, FavouritePlace>();
         askPermissions();
         PlaceAutocompleteFragment autocompleteFragment =
                 (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(
@@ -242,7 +242,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 ActivityCompat.requestPermissions(this, permissions,
                         REQUEST_ID_ACCESS_COURSE_FINE_LOCATION);
 
-                return;
             }
         }
     }
@@ -685,12 +684,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             for (int i = 0; i < result.size(); i++) {
                 FavouritePlace fp = result.get(i);
                 LatLng point = new LatLng(fp.Latitude, fp.Longitude);
-//                favouriteFragment.onMsgFromMainToFragment(new FavouritePlace(fp.Name, fp.Latitude, fp.Longitude));
                 MarkerOptions option = new MarkerOptions();
                 option.title(fp.Name);
                 option.position(point);
-                Marker currentMarker = mMap.addMarker(option);
-                currentMarker.showInfoWindow();
+//                Marker currentMarker = mMap.addMarker(option);
+                Marker currentMarker = PlaceMarker(fp);
+                favouritePlaceMarkerMap.put(currentMarker, fp);
             }
             Toast.makeText(MapsActivity.this, "Add marker done!", Toast.LENGTH_SHORT).show();
         }
@@ -745,12 +744,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        askPermissions();
-
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            askPermissions();
-//        }
+        while (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            askPermissions();
+        }
         mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
         mMap.setIndoorEnabled(true);
         UiSettings uiSettings = mMap.getUiSettings();
         uiSettings.setIndoorLevelPickerEnabled(true);
@@ -758,12 +756,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         uiSettings.setMapToolbarEnabled(true);
         uiSettings.setCompassEnabled(true);
         uiSettings.setZoomControlsEnabled(false);
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-            }
-        });
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
@@ -786,8 +778,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 desPos = marker.getPosition();
                 marker.showInfoWindow();
                 markerDetailFragment = new MarkerDetailFragment();
+                markerDetailFragment.onMsgFromMainToFragment(favouritePlaceMarkerMap.get(marker));
                 markerDetailFragment.show(getSupportFragmentManager(), markerDetailFragment.getTag());
-
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 16));
                 return true;
             }
@@ -809,6 +801,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    public Marker PlaceMarker(FavouritePlace favouritePlace) {
+
+        Marker m = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(favouritePlace.Latitude, favouritePlace.Longitude))
+                .title(favouritePlace.Name));
+        return m;
+    }
+
     public void onMsgFromFragToMain(String sender, FavouritePlace favouritePlace) {
         if (sender.equals("PLACE")) {
             mMap.clear();
@@ -819,7 +819,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             option.title(favouritePlace.Name);
             option.snippet("....");
             option.position(latLng);
-            Marker currentMarker = mMap.addMarker(option);
+            Marker currentMarker = PlaceMarker(favouritePlace);
+//            Marker currentMarker = mMap.addMarker(option);
             currentMarker.showInfoWindow();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
         }

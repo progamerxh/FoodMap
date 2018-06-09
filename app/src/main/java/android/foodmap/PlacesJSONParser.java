@@ -24,7 +24,9 @@ public class PlacesJSONParser {
                 String Name = mjObject.getString("Name");
                 double Latitude = mjObject.getDouble("Latitude");
                 double Longitude = mjObject.getDouble("Longitude");
-                FavouritePlace fp = new FavouritePlace(ID, Name, Latitude, Longitude);
+                String MobilePicturePath = mjObject.getString("MobilePicturePath");
+                String Address = mjObject.getString("Address");
+                FavouritePlace fp = new FavouritePlace(ID, Name, Latitude, Longitude,MobilePicturePath,Address);
                 placeList.add(fp);
             } // End Loop
 
