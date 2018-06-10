@@ -18,7 +18,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
-import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -65,9 +64,11 @@ import java.util.HashMap;
 import java.util.List;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, PlaceSelectionListener, NavigationView.OnNavigationItemSelectedListener {
-    static Context mContext;
+
     private static final String MYTAG = "MYTAG";
     public static final int REQUEST_ID_ACCESS_COURSE_FINE_LOCATION = 100;
+    private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
+    static Context mContext;
     private MapView mapView;
     private GoogleMap mMap;
     private LocationManager locationManager;
@@ -75,13 +76,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng desPos;
     public FloatingActionButton fabDirect;
     private FloatingActionButton fabCur;
-    private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     private DrawerLayout drawer;
     private ImageView imgMenu, imgFav;
     private ProgressDialog myProgress;
     private FragmentTransaction ft;
     private FavouriteFragment favouriteFragment;
-    private FavouritePlace curFPMarfker;
+    private FavouritePlace curFP;
     private HashMap<Marker, FavouritePlace> favouritePlaceMarkerMap;
     private MarkerDetailFragment markerDetailFragment;
 
@@ -126,18 +126,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
                 alertDialog.setTitle(R.string.str_add_favourite);
                 alertDialog.setMessage(R.string.str_enter_name);
-
-                final EditText input = new EditText(MapsActivity.this);
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT);
-                input.setLayoutParams(lp);
-                alertDialog.setView(input);
-
                 alertDialog.setPositiveButton(R.string.str_yes,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                favouriteFragment.onMsgFromMainToFragment(new FavouritePlace(input.getText().toString(), desPos.latitude, desPos.longitude));
+                                if (curFP != null)
+                                    favouriteFragment.onMsgFromMainToFragment(curFP);
                             }
                         });
 
@@ -147,7 +140,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 dialog.cancel();
                             }
                         });
-
                 alertDialog.show();
             }
 
@@ -696,6 +688,109 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
+    public void onMapReady(GoogleMap googleMap) {
+        while (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            askPermissions();
+        }
+        mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
+        mMap.setIndoorEnabled(true);
+        UiSettings uiSettings = mMap.getUiSettings();
+        uiSettings.setIndoorLevelPickerEnabled(true);
+        uiSettings.setMyLocationButtonEnabled(true);
+        uiSettings.setMapToolbarEnabled(true);
+        uiSettings.setCompassEnabled(true);
+        uiSettings.setZoomControlsEnabled(false);
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                myProgress.dismiss();
+                showMyLocation();
+            }
+        });
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+                mMap.clear();
+                mMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
+                desPos = latLng;
+            }
+        });
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                desPos = marker.getPosition();
+                curFP = favouritePlaceMarkerMap.get(marker);
+                marker.showInfoWindow();
+                markerDetailFragment = new MarkerDetailFragment();
+                markerDetailFragment.onMsgFromMainToFragment(favouritePlaceMarkerMap.get(marker));
+                markerDetailFragment.show(getSupportFragmentManager(), markerDetailFragment.getTag());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 16));
+                return true;
+            }
+        });
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                View v = (MapsActivity.this).getLayoutInflater().inflate(R.layout.marker_layout, null);
+                ImageView imgPhoto = (ImageView) v.findViewById(R.id.imgPhoto);
+                TextView txtPlaceName = (TextView) v.findViewById(R.id.txtPlaceName);
+                return v;
+
+            }
+        });
+    }
+
+    public Marker PlaceMarker(FavouritePlace favouritePlace) {
+
+        Marker m = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(favouritePlace.Latitude, favouritePlace.Longitude))
+                .title(favouritePlace.Name));
+        return m;
+    }
+
+    public void onMsgFromFragToMain(String sender, FavouritePlace favouritePlace) {
+        if (sender.equals("PLACE")) {
+            mMap.clear();
+            getFragmentManager().popBackStackImmediate();
+            LatLng latLng = new LatLng(favouritePlace.Latitude, favouritePlace.Longitude);
+            MarkerOptions option = new MarkerOptions();
+            option.title(favouritePlace.Name);
+            option.snippet("....");
+            option.position(latLng);
+            Marker currentMarker = PlaceMarker(favouritePlace);
+            curFP = favouritePlaceMarkerMap.get(currentMarker);
+//            Marker currentMarker = mMap.addMarker(option);
+            currentMarker.showInfoWindow();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        }
+    }
+
+    public void onMsgFromFragToMain(String sender, String msg) {
+        if (sender.equals("DIRECT")) {
+            fabDirect.callOnClick();
+            markerDetailFragment.dismiss();
+        } else if (sender.equals("ADDFAV"))
+            imgFav.callOnClick();
+    }
+
+
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        super.onAttachFragment(fragment);
+        // get a reference to each fragment attached to the GUI
+        if (fragment.getClass() == FavouriteFragment.class) {
+            favouriteFragment = (FavouriteFragment) fragment;
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         mapView.onResume();
@@ -741,106 +836,4 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onError(Status status) {
 
     }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        while (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            askPermissions();
-        }
-        mMap = googleMap;
-        mMap.setMyLocationEnabled(true);
-        mMap.setIndoorEnabled(true);
-        UiSettings uiSettings = mMap.getUiSettings();
-        uiSettings.setIndoorLevelPickerEnabled(true);
-        uiSettings.setMyLocationButtonEnabled(true);
-        uiSettings.setMapToolbarEnabled(true);
-        uiSettings.setCompassEnabled(true);
-        uiSettings.setZoomControlsEnabled(false);
-        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-            @Override
-            public void onMapLoaded() {
-                myProgress.dismiss();
-                showMyLocation();
-            }
-        });
-        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-            @Override
-            public void onMapLongClick(LatLng latLng) {
-                mMap.clear();
-                mMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
-                desPos = latLng;
-            }
-        });
-
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                desPos = marker.getPosition();
-                marker.showInfoWindow();
-                markerDetailFragment = new MarkerDetailFragment();
-                markerDetailFragment.onMsgFromMainToFragment(favouritePlaceMarkerMap.get(marker));
-                markerDetailFragment.show(getSupportFragmentManager(), markerDetailFragment.getTag());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 16));
-                return true;
-            }
-        });
-        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-            @Override
-            public View getInfoWindow(Marker marker) {
-                return null;
-            }
-
-            @Override
-            public View getInfoContents(Marker marker) {
-                View v = (MapsActivity.this).getLayoutInflater().inflate(R.layout.marker_layout, null);
-                ImageView imgPhoto = (ImageView) v.findViewById(R.id.imgPhoto);
-                TextView txtPlaceName = (TextView) v.findViewById(R.id.txtPlaceName);
-                return v;
-
-            }
-        });
-    }
-
-    public Marker PlaceMarker(FavouritePlace favouritePlace) {
-
-        Marker m = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(favouritePlace.Latitude, favouritePlace.Longitude))
-                .title(favouritePlace.Name));
-        return m;
-    }
-
-    public void onMsgFromFragToMain(String sender, FavouritePlace favouritePlace) {
-        if (sender.equals("PLACE")) {
-            mMap.clear();
-            curFPMarfker = favouritePlace;
-            getFragmentManager().popBackStackImmediate();
-            LatLng latLng = new LatLng(favouritePlace.Latitude, favouritePlace.Longitude);
-            MarkerOptions option = new MarkerOptions();
-            option.title(favouritePlace.Name);
-            option.snippet("....");
-            option.position(latLng);
-            Marker currentMarker = PlaceMarker(favouritePlace);
-//            Marker currentMarker = mMap.addMarker(option);
-            currentMarker.showInfoWindow();
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-        }
-    }
-
-    public void onMsgFromFragToMain(String sender, String msg) {
-        if (sender.equals("DIRECT"))
-            fabDirect.callOnClick();
-        markerDetailFragment.dismiss();
-
-    }
-
-
-    @Override
-    public void onAttachFragment(Fragment fragment) {
-        super.onAttachFragment(fragment);
-        // get a reference to each fragment attached to the GUI
-        if (fragment.getClass() == FavouriteFragment.class) {
-            favouriteFragment = (FavouriteFragment) fragment;
-        }
-    }
-
 }
