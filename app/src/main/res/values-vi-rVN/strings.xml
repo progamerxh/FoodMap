@@ -26,4 +26,6 @@
     <string name="str_success">Thành công</string>
     <string name="str_add_favourite">Thêm địa điểm yêu thích</string>
     <string name="str_enter_name">Nhập tên</string>
+    <string name="str_map_loading">Đang tải bản đồ...</string>
+    <string name="str_please_wait">Chờ một chút...</string>
 </resources>

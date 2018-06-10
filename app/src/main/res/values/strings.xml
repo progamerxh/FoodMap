@@ -37,4 +37,6 @@
     <string name="str_success">Success</string>
     <string name="str_add_favourite" >Add favourite location</string>
     <string name="str_enter_name">Enter name</string>
+    <string name="str_map_loading">Map Loading...</string>
+    <string name="str_please_wait">Please wait...</string>
 </resources>
