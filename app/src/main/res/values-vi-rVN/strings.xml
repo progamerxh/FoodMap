@@ -20,4 +20,6 @@
     <string name="yuor_favorit_location">Địa điểm yêu thích của bạn</string>
     <string name="favorit_location">Địa điểm yêu thích</string>
     <string name="str_delete_confirm">Bạn có muốn xóa %1$s không?</string>
+    <string name="favourite_location">Địa điểm yêu thích của bạn</string>
+    <string name="your_favourite_location">Địa điểm yêu thích của bạn</string>
 </resources>
