@@ -138,7 +138,7 @@ public class FavouriteFragment extends Fragment {
                 + favouritePlace.Longitude + "')");
     }
 
-    public void DialogDelete(String name, final int id) {
+    public static void DialogDelete(String name, final int id) {
         AlertDialog.Builder dialogDelete = new AlertDialog.Builder(context);
         dialogDelete.setMessage(R.string.str_delete_confirm);
         dialogDelete.setPositiveButton(R.string.str_yes, new DialogInterface.OnClickListener() {
