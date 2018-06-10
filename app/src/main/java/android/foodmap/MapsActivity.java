@@ -678,7 +678,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 MarkerOptions option = new MarkerOptions();
                 option.title(fp.Name);
                 option.position(point);
-//                Marker currentMarker = mMap.addMarker(option);
                 Marker currentMarker = PlaceMarker(fp);
                 favouritePlaceMarkerMap.put(currentMarker, fp);
             }
@@ -761,11 +760,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng latLng = new LatLng(favouritePlace.Latitude, favouritePlace.Longitude);
             MarkerOptions option = new MarkerOptions();
             option.title(favouritePlace.Name);
-            option.snippet("....");
             option.position(latLng);
             Marker currentMarker = PlaceMarker(favouritePlace);
             curFP = favouritePlaceMarkerMap.get(currentMarker);
-//            Marker currentMarker = mMap.addMarker(option);
             currentMarker.showInfoWindow();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
         }

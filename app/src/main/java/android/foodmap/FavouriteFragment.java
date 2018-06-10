@@ -37,7 +37,7 @@ public class FavouriteFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     static Database database;
     ListView lvFavourite;
-    static ArrayList<FavouritePlace> coordinates;
+    static ArrayList<FavouritePlace> favouritePlacesList;
     static PlaceAdapter adapter;
     LinearLayout layout_favourite;
 
@@ -58,14 +58,16 @@ public class FavouriteFragment extends Fragment {
         database = new Database(context, "Favourite-Places", null, 1);
         //database.QueryData("INSERT INTO PlaceCoordinates VALUES(null, 'thu', '234','22')");
         //Tạo bảng Place-Coordinates:
-        database.QueryData("CREATE TABLE IF NOT EXISTS PlaceCoordinates(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+        database.QueryData("CREATE TABLE IF NOT EXISTS FavouritePlace(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 " Name VARCHAR(100)," +
                 " Latitude DOUBLE," +
-                " Longitude DOUBLE)");
+                " Longitude DOUBLE," +
+                " Photo VARCHAR(2048)," +
+                " Adress NVARCHAR(100))");
         //đổ dữ liệu vào listview.
-        coordinates = new ArrayList<>();
+        favouritePlacesList = new ArrayList<>();
 
-        adapter = new PlaceAdapter(main, R.layout.row_place, coordinates);
+        adapter = new PlaceAdapter(main, R.layout.row_place, favouritePlacesList);
 
 
         getDataFavouritePlace();
@@ -81,7 +83,7 @@ public class FavouriteFragment extends Fragment {
         lvFavourite.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                main.onMsgFromFragToMain("PLACE", coordinates.get(position));
+                main.onMsgFromFragToMain("PLACE", favouritePlacesList.get(position));
             }
         });
         return layout_favourite;
@@ -119,23 +121,27 @@ public class FavouriteFragment extends Fragment {
 
     static void getDataFavouritePlace() {
         //select data
-        Cursor dataPlace = database.GetData("SELECT * FROM PlaceCoordinates");
-        coordinates.clear();
+        Cursor dataPlace = database.GetData("SELECT * FROM FavouritePlace");
+        favouritePlacesList.clear();
         while (dataPlace.moveToNext()) {
             String Name = dataPlace.getString(1);
             int id = dataPlace.getInt(0);
             double lat = dataPlace.getDouble(2);
             double lng = dataPlace.getDouble(3);
-            coordinates.add(new FavouritePlace(id, Name, lat, lng));
+            String photo = dataPlace.getString(4);
+            String address = dataPlace.getString(5);
+            favouritePlacesList.add(new FavouritePlace(id, Name, lat, lng, photo,address));
         }
         adapter.notifyDataSetChanged();
     }
 
     public void onMsgFromMainToFragment(FavouritePlace favouritePlace) {
-        database.QueryData("INSERT INTO PlaceCoordinates VALUES(null, '"
+        database.QueryData("INSERT INTO FavouritePlace VALUES(null, '"
                 + favouritePlace.Name + "', '"
                 + favouritePlace.Latitude + "','"
-                + favouritePlace.Longitude + "')");
+                + favouritePlace.Longitude + "','"
+                + favouritePlace.MobilePicturePath + "','"
+                + favouritePlace.Address+ "')");
     }
 
     public static void DialogDelete(String name, final int id) {
@@ -144,7 +150,7 @@ public class FavouriteFragment extends Fragment {
         dialogDelete.setPositiveButton(R.string.str_yes, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                database.QueryData("DELETE FROM PlaceCoordinates WHERE ID='" + id + "'");
+                database.QueryData("DELETE FROM FavouritePlace WHERE ID='" + id + "'");
                 Toast.makeText(context, R.string.str_deleted, Toast.LENGTH_SHORT).show();
                 getDataFavouritePlace();
             }
@@ -173,7 +179,7 @@ public class FavouriteFragment extends Fragment {
             public void onClick(View view) {
                 Toast.makeText(context, R.string.str_success, Toast.LENGTH_LONG).show();
                 String newName = edtNewName.getText().toString().trim();
-                database.QueryData("UPDATE PlaceCoordinates SET Name ='" + newName + "' WHERE ID = '" + id + "'");
+                database.QueryData("UPDATE FavouritePlace SET Name ='" + newName + "' WHERE ID = '" + id + "'");
 
                 dialog.dismiss();
                 getDataFavouritePlace();
