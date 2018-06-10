@@ -31,16 +31,7 @@
         android:layout_centerHorizontal="true"
         android:layout_weight="1" />
 
-    <ImageButton
-        android:id="@+id/imgFav"
-        android:layout_width="?attr/actionBarSize"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:background="#FFFFFF"
-        android:contentDescription="@string/menu_icons"
-        android:scaleType="fitCenter"
-        app:srcCompat="@android:drawable/ic_input_add" />
+     />
 </LinearLayout>
 
 

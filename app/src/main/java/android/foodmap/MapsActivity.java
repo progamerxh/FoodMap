@@ -75,7 +75,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public FloatingActionButton fabDirect;
     private FloatingActionButton fabCur;
     private DrawerLayout drawer;
-    private ImageView imgMenu, imgFav;
+    private ImageView imgMenu;
     private ProgressDialog myProgress;
     private FragmentTransaction ft;
     private FavouriteFragment favouriteFragment;
@@ -116,31 +116,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         navigationView.setNavigationItemSelectedListener(this);
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         imgMenu = (ImageView) findViewById(R.id.imgMenu);
-        imgFav = (ImageView) findViewById(R.id.imgFav);
-        imgFav.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MapsActivity.this, "Find places", Toast.LENGTH_SHORT).show();
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
-                alertDialog.setTitle(R.string.str_add_favourite);
-                alertDialog.setPositiveButton(R.string.str_yes,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                if (curFP != null)
-                                    favouriteFragment.onMsgFromMainToFragment(curFP);
-                            }
-                        });
-
-                alertDialog.setNegativeButton(R.string.str_no,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        });
-                alertDialog.show();
-            }
-
-        });
         imgMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -210,6 +185,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     };
 
+    private void AddFavourite()
+    {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
+        alertDialog.setTitle(R.string.str_add_favourite);
+        alertDialog.setPositiveButton(R.string.str_yes,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (curFP != null)
+                            favouriteFragment.onMsgFromMainToFragment(curFP);
+                    }
+                });
+
+        alertDialog.setNegativeButton(R.string.str_no,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        alertDialog.show();
+    }
     private void askPermissions() {
 
         // Với API >= 23, bạn phải hỏi người dùng cho phép xem vị trí của họ.
@@ -761,6 +756,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             option.title(favouritePlace.Name);
             option.position(latLng);
             Marker currentMarker = PlaceMarker(favouritePlace);
+            favouritePlaceMarkerMap.put(currentMarker,curFP);
             curFP = favouritePlace;
             currentMarker.showInfoWindow();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
@@ -772,7 +768,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             fabDirect.callOnClick();
             markerDetailFragment.dismiss();
         } else if (sender.equals("ADDFAV"))
-            imgFav.callOnClick();
+            AddFavourite();
     }
 
 
