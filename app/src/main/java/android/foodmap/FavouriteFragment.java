@@ -141,15 +141,15 @@ public class FavouriteFragment extends Fragment {
     public void DialogDelete(String name, final int id) {
         AlertDialog.Builder dialogDelete = new AlertDialog.Builder(context);
         dialogDelete.setMessage(getString(R.string.str_delete_confirm, name));
-        dialogDelete.setPositiveButton("Có", new DialogInterface.OnClickListener() {
+        dialogDelete.setPositiveButton(R.string.str_yes, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 database.QueryData("DELETE FROM PlaceCoordinates WHERE ID='" + id + "'");
-                Toast.makeText(context, "Đã xóa", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.str_deleted, Toast.LENGTH_SHORT).show();
                 getDataFavouritePlace();
             }
         });
-        dialogDelete.setNegativeButton("Không", new DialogInterface.OnClickListener() {
+        dialogDelete.setNegativeButton(R.string.str_no, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
 
@@ -171,7 +171,7 @@ public class FavouriteFragment extends Fragment {
         btnOK.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(context, "thanh công", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, R.string.str_success, Toast.LENGTH_LONG).show();
                 String newName = edtNewName.getText().toString().trim();
                 database.QueryData("UPDATE PlaceCoordinates SET Name ='" + newName + "' WHERE ID = '" + id + "'");
 

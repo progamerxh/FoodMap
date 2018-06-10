@@ -31,4 +31,8 @@
     <string name="your_favourite_location">Your favourite location</string>
     <string name="favourite_location">Favourite location</string>
     <string name="str_delete_confirm">Do you want to delete %1$s?</string>
+    <string name="str_yes">Yes</string>
+    <string name="str_no">No</string>
+    <string name="str_deleted">Deleted</string>
+    <string name="str_success">Success</string>
 </resources>
