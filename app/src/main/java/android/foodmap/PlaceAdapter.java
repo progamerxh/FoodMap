@@ -19,6 +19,7 @@ public class PlaceAdapter extends BaseAdapter {
     private int layout;
     private List<FavouritePlace> favouritePlacesList;
     private Context fcontext;
+
     public PlaceAdapter(Context context, int layout, List<FavouritePlace> favouritePlaces) {
         this.context = context;
         this.layout = layout;
@@ -27,7 +28,7 @@ public class PlaceAdapter extends BaseAdapter {
 
 
     @Override
-    public int getCount(){
+    public int getCount() {
         return favouritePlacesList.size();
     }
 
@@ -41,24 +42,24 @@ public class PlaceAdapter extends BaseAdapter {
         return 0;
     }
 
-    private class ViewHolder{
+    private class ViewHolder {
         TextView txtPlaceName;
         ImageView imgDelete, imgEdit;
     }
+
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
         ViewHolder Holder;
-        if(view == null) {
+        if (view == null) {
             Holder = new ViewHolder();
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = inflater.inflate(layout,null);
+            view = inflater.inflate(layout, null);
             //ánh xạ view
             Holder.txtPlaceName = (TextView) view.findViewById(R.id.txtPlaceName);
             Holder.imgDelete = (ImageView) view.findViewById(R.id.imgDelete);
             Holder.imgEdit = (ImageView) view.findViewById(R.id.imgEdit);
             view.setTag(Holder);
-        }
-        else{
+        } else {
             Holder = (ViewHolder) view.getTag();
         }
         //Gán giá trị
@@ -69,13 +70,13 @@ public class PlaceAdapter extends BaseAdapter {
         Holder.imgEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FavouriteFragment.DialogEdit(favouritePlace.Name,favouritePlace.ID);
+                FavouriteFragment.DialogEdit(favouritePlace.Name, favouritePlace.ID);
             }
         });
         Holder.imgDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FavouriteFragment.DialogDelete(favouritePlace.Name, favouritePlace.ID);
+                new FavouriteFragment().DialogDelete(favouritePlace.Name, favouritePlace.ID);
             }
         });
         return view;
