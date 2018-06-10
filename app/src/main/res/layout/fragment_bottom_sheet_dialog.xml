@@ -18,7 +18,7 @@
         android:id="@+id/txtPlaceName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Place name"
+        android:text="@string/place_name"
         android:textSize="16sp" />
 
 
@@ -26,7 +26,7 @@
         android:id="@+id/txtPlaceType"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Place type"
+        android:text="@string/place_type"
         android:textSize="16sp" />
 
     <LinearLayout
@@ -46,7 +46,7 @@
             android:id="@+id/txtPlaceAddress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Place address"
+            android:text="@string/place_address"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -67,7 +67,7 @@
             android:id="@+id/txtPlaceOpenTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Open time"
+            android:text="@string/open_time"
             android:textSize="16sp" />
     </LinearLayout>
 

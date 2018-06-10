@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FoodMap</string>
+    <string name="nav_about">Giới thiệu</string>
+    <string name="nav_tutorial">Hướng dẫn</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="nav_bookmark">Đánh dấu</string>
+    <string name="nav_offline_map">Bản đồ ngoại tuyến</string>
+    <string name="action_settings">Cài đặt</string>
+    <string name="title_activity_maps">Bản đồ</string>
+    <string name="update_your_location">Cập nhật địa điểm</string>
+    <string name="direction">Dẫn đường</string>
+    <string name="get_my_location">Lấy vị trí hiện tại</string>
+    <string name="confirm">Xác nhận</string>
+    <string name="cancel">Hủy</string>
+    <string name="place_name">Tên</string>
+    <string name="place_type">Loại</string>
+    <string name="place_address">Địa chỉ</string>
+    <string name="open_time">Thời gian mở cửa</string>
+    <string name="yuor_favorit_location">Địa điểm yêu thích của bạn</string>
+</resources>
