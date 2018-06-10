@@ -108,8 +108,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ft.commit();
 
         myProgress = new ProgressDialog(this);
-        myProgress.setTitle("Map Loading ...");
-        myProgress.setMessage("Please wait...");
+        myProgress.setTitle(getString(R.string.str_map_loading));
+        myProgress.setMessage(getString(R.string.str_please_wait));
         myProgress.setCancelable(true);
         myProgress.show();
         final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
