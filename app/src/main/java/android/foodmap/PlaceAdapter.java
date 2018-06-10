@@ -76,7 +76,7 @@ public class PlaceAdapter extends BaseAdapter {
         Holder.imgDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new FavouriteFragment().DialogDelete(favouritePlace.Name, favouritePlace.ID);
+                FavouriteFragment.DialogDelete(favouritePlace.Name, favouritePlace.ID);
             }
         });
         return view;

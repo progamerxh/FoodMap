@@ -140,7 +140,7 @@ public class FavouriteFragment extends Fragment {
 
     public void DialogDelete(String name, final int id) {
         AlertDialog.Builder dialogDelete = new AlertDialog.Builder(context);
-        dialogDelete.setMessage(getString(R.string.str_delete_confirm, name));
+        dialogDelete.setMessage(R.string.str_delete_confirm);
         dialogDelete.setPositiveButton(R.string.str_yes, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
