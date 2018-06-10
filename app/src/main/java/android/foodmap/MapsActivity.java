@@ -124,8 +124,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View v) {
                 Toast.makeText(MapsActivity.this, "Find places", Toast.LENGTH_SHORT).show();
                 AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
-                alertDialog.setTitle("Thêm địa điểm yêu thích");
-                alertDialog.setMessage("Nhập tên");
+                alertDialog.setTitle(R.string.str_add_favourite);
+                alertDialog.setMessage(R.string.str_enter_name);
 
                 final EditText input = new EditText(MapsActivity.this);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -134,14 +134,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 input.setLayoutParams(lp);
                 alertDialog.setView(input);
 
-                alertDialog.setPositiveButton("YES",
+                alertDialog.setPositiveButton(R.string.str_yes,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 favouriteFragment.onMsgFromMainToFragment(new FavouritePlace(input.getText().toString(), desPos.latitude, desPos.longitude));
                             }
                         });
 
-                alertDialog.setNegativeButton("NO",
+                alertDialog.setNegativeButton(R.string.str_no,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
