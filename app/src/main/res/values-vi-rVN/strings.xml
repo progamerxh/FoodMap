@@ -4,7 +4,7 @@
     <string name="nav_about">Giới thiệu</string>
     <string name="nav_tutorial">Hướng dẫn</string>
     <string name="nav_settings">Cài đặt</string>
-    <string name="nav_bookmark">Đánh dấu</string>
+    <string name="nav_bookmark">Vị trí yêu thích</string>
     <string name="nav_offline_map">Bản đồ ngoại tuyến</string>
     <string name="action_settings">Cài đặt</string>
     <string name="title_activity_maps">Bản đồ</string>
@@ -24,4 +24,6 @@
     <string name="str_no">Không</string>
     <string name="str_deleted">Đã xóa</string>
     <string name="str_success">Thành công</string>
+    <string name="str_add_favourite">Thêm địa điểm yêu thích</string>
+    <string name="str_enter_name">Nhập tên</string>
 </resources>
