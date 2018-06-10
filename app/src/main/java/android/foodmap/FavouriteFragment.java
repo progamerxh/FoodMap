@@ -138,9 +138,9 @@ public class FavouriteFragment extends Fragment {
                 + favouritePlace.Longitude + "')");
     }
 
-    static public void DialogDelete(String name, final int id) {
+    public void DialogDelete(String name, final int id) {
         AlertDialog.Builder dialogDelete = new AlertDialog.Builder(context);
-        dialogDelete.setMessage("Bạn có muốn xóa " + name + " không?");
+        dialogDelete.setMessage(getString(R.string.str_delete_confirm, name));
         dialogDelete.setPositiveButton("Có", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {

@@ -18,4 +18,6 @@
     <string name="place_address">Địa chỉ</string>
     <string name="open_time">Thời gian mở cửa</string>
     <string name="yuor_favorit_location">Địa điểm yêu thích của bạn</string>
+    <string name="favorit_location">Địa điểm yêu thích</string>
+    <string name="str_delete_confirm">Bạn có muốn xóa %1$s không?</string>
 </resources>

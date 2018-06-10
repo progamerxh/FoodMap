@@ -30,4 +30,5 @@
     <string name="open_time">Open time</string>
     <string name="yuor_favorit_location">Yuor favorit location</string>
     <string name="favorit_location">Favorit location</string>
+    <string name="str_delete_confirm">Do you wanna delete %1$s?</string>
 </resources>
