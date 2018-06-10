@@ -28,9 +28,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -719,10 +717,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onMarkerClick(Marker marker) {
                 desPos = marker.getPosition();
-                curFP = favouritePlaceMarkerMap.get(marker);
+                if (favouritePlaceMarkerMap.get(marker) != null)
+                    curFP = favouritePlaceMarkerMap.get(marker);
                 marker.showInfoWindow();
                 markerDetailFragment = new MarkerDetailFragment();
-                markerDetailFragment.onMsgFromMainToFragment(favouritePlaceMarkerMap.get(marker));
+                markerDetailFragment.onMsgFromMainToFragment(curFP);
                 markerDetailFragment.show(getSupportFragmentManager(), markerDetailFragment.getTag());
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 16));
                 return true;
@@ -762,7 +761,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             option.title(favouritePlace.Name);
             option.position(latLng);
             Marker currentMarker = PlaceMarker(favouritePlace);
-            curFP = favouritePlaceMarkerMap.get(currentMarker);
+            curFP = favouritePlace;
             currentMarker.showInfoWindow();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
         }
